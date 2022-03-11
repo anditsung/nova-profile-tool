@@ -1,51 +1,43 @@
 <template>
-    <loading-view :loading="isLoading">
-        <heading :level="1" class="mb-3">{{ __('Profile') }}</heading>
+    <loading-view :loading="loading">
+        <heading class="mb-3">{{__("Update Profile")}}</heading>
 
+        <card class="overflow-hidden">
+            <form @submit.prevent="saveProfile">
+                <!-- Validation Errors -->
+                <validation-errors :errors="validationErrors"/>
 
-        <card class="relative overflow-hidden mb-8">
-            <component
-                :class="{
-                    'remove-bottom-border': index == fields.length - 1,
-                }"
-                v-for="(field, index) in fields"
-                :key="index"
-                :is="`form-${field.component}`"
-                :errors="validationErrors"
-                :field="field"
-            />
-
-            <div class="bg-30 flex px-8 py-4">
-                <div class="ml-auto">
-                    <button
-                        @click="getFields"
-                    >
-                        {{ __('Reset') }}
-                    </button>
-
-                    <progress-button
-                        @click.native="updateProfile"
-                        :disabled="isWorking"
-                        :processing="isWorking"
-                        class="ml-2"
-                    >
-                        {{ __('Update Profile') }}
-                    </progress-button>
-
+                <!-- Fields -->
+                <div v-for="field in fields">
+                    <component
+                        :is="'form-' + field.component"
+                        :errors="validationErrors"
+                        :resource-name="resourceName"
+                        :field="field"
+                        :via-resource="viaResource"
+                        :via-resource-id="viaResourceId"
+                        :via-relationship="viaRelationship"
+                    />
                 </div>
-            </div>
+
+                <!-- Create Button -->
+                <div class="bg-30 flex px-8 py-4">
+                    <button dusk="create-and-add-another-button" class="ml-auto btn btn-default btn-primary mr-3">
+                        {{__('Save Profile')}}
+                    </button>
+                </div>
+            </form>
         </card>
     </loading-view>
 </template>
 
 <script>
-    import { Errors } from 'laravel-nova'
+    import { Errors, Minimum } from 'laravel-nova'
 
     export default {
 
         data: () => ({
-            isLoading: false,
-            isWorking: false,
+            loading: true,
             fields: [],
             validationErrors: new Errors(),
         }),
@@ -55,36 +47,33 @@
         },
 
         methods: {
-
             /**
              * Get the available fields for the resource.
              */
             async getFields() {
-                this.validationErrors = new Errors()
-
-                this.isLoading = true
-
                 this.fields = []
 
                 const { data: fields } = await Nova.request().get(
                     '/nova-vendor/nova-profile-tool/'
                 )
 
+                console.log(fields)
+
                 this.fields = fields
-                this.isLoading = false
+                this.loading = false
             },
 
             /**
              * Saves the user's profile
              */
-            async updateProfile() {
+            async saveProfile() {
                 try {
-                    this.isWorking = true
+                    this.loading = true
                     const response = await this.createRequest()
-                    this.isWorking = false
+                    this.loading = false
 
                     this.$toasted.show(
-                        this.__('Your profile has been updated!'),
+                        this.__('Your profile has been saved!'),
                         { type: 'success' }
                     )
 
@@ -93,10 +82,9 @@
 
                     this.validationErrors = new Errors()
                 } catch (error) {
-                    this.isWorking = false
+                    this.loading = false
                     if (error.response.status == 422) {
                         this.validationErrors = new Errors(error.response.data.errors)
-                        Nova.error(this.__('There was a problem submitting the form.'))
                     }
                 }
             },

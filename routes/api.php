@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Runline\ProfileTool\Http\Controllers\ToolController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,5 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', \Runline\ProfileTool\Http\Controllers\ToolController::class . '@index');
-Route::post('/', \Runline\ProfileTool\Http\Controllers\ToolController::class . '@store');
+//Route::get('/', \Runline\ProfileTool\Http\Controllers\ToolController::class . '@index');
+Route::get('/', [ToolController::class, 'fields']);
+Route::post('/', [ToolController::class, 'updateProfile']);
+//Route::post('/', \Runline\ProfileTool\Http\Controllers\ToolController::class . '@store');
